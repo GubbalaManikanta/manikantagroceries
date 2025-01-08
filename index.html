@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery List</title>
+    <style>
+        /* Full page background */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-image: url('./egor-litvinov-ncKxCn5SI3A-unsplash.jpg'); /* Background for full page */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh; /* Ensure the full page height */
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff0000;
+        }
+
+        /* Grocery List container background */
+        .grocery-list {
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            background-image: url('./eilis-garvey-wz9l42S4jQ4-unsplash.jpg'); /* Background for grocery list */
+            background-size: cover; /* Makes the background image cover the entire container */
+            background-position: center;
+            background-repeat: no-repeat;
+            overflow-y: auto;
+            height: 400px; /* Set the height of the list container */
+        }
+
+        .grocery-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent background for grocery items */
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        .grocery-item label {
+            flex: 1;
+            margin-left: 10px;
+        }
+
+        .grocery-item select {
+            margin-left: 10px;
+        }
+
+        .grocery-item button {
+            margin-left: 10px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .grocery-item button:hover {
+            background-color: #e60000;
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .controls input {
+            padding: 5px;
+            margin-right: 10px;
+        }
+
+        .controls button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .add-item-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .add-item-button:hover {
+            background-color: #45a049;
+        }
+
+        .clear-list-button {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        .clear-list-button:hover {
+            background-color: #e68a00;
+        }
+    </style>
+</head>
+<body>
+    <h1>Grocery List</h1>
+    <div class="grocery-list" id="groceryList">
+        <!-- Example existing items -->
+        <div class="grocery-item">
+            <input type="checkbox" id="item1">
+            <label for="item1">Senagapappu</label>
+            <select name="quantity1" id="quantity1">
+                <option value="250g">250g</option>
+                <option value="500g">500g</option>
+                <option value="1kg">1kg</option>
+                <option value="1.5kg">1.5kg</option>
+                <option value="2kg">2kg</option>
+            </select>
+            <button onclick="removeItem(this)">Remove</button>
+        </div>
+        <!-- More items go here -->
+    </div>
+
+    <div class="controls">
+        <input type="text" id="newItemName" placeholder="Enter new item name">
+        <button class="add-item-button" onclick="addItem()">Add Item</button>
+        <button class="clear-list-button" onclick="clearList()">Clear List</button>
+    </div>
+
+    <script>
+        // Function to save the grocery list to localStorage
+        function saveList() {
+            const groceryItems = [];
+            const groceryList = document.getElementById('groceryList');
+            const items = groceryList.querySelectorAll('.grocery-item');
+            items.forEach(item => {
+                const name = item.querySelector('label').textContent;
+                const quantity = item.querySelector('select').value;
+                groceryItems.push({ name, quantity });
+            });
+            localStorage.setItem('groceryList', JSON.stringify(groceryItems));
+        }
+
+        // Load the grocery list from localStorage on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedList = JSON.parse(localStorage.getItem('groceryList'));
+            if (savedList) {
+                savedList.forEach(item => {
+                    addItemToList(item.name, item.quantity);
+                });
+            }
+        });
+
+        // Function to add a new item to the list
+        function addItem() {
+            const newItemName = document.getElementById('newItemName').value;
+            if (newItemName) {
+                addItemToList(newItemName, '250g'); // Default quantity is 250g
+                document.getElementById('newItemName').value = ''; // Clear input field
+                saveList(); // Save to localStorage
+            }
+        }
+
+        // Function to add an item to the list (HTML)
+        function addItemToList(name, quantity) {
+            const groceryList = document.getElementById('groceryList');
+            const div = document.createElement('div');
+            div.classList.add('grocery-item');
+            div.innerHTML = `
+                <input type="checkbox">
+                <label>${name}</label>
+                <select>
+                    <option value="250g" ${quantity === '250g' ? 'selected' : ''}>250g</option>
+                    <option value="500g" ${quantity === '500g' ? 'selected' : ''}>500g</option>
+                    <option value="1kg" ${quantity === '1kg' ? 'selected' : ''}>1kg</option>
+                    <option value="1.5kg" ${quantity === '1.5kg' ? 'selected' : ''}>1.5kg</option>
+                    <option value="2kg" ${quantity === '2kg' ? 'selected' : ''}>2kg</option>
+                </select>
+                <button onclick="removeItem(this)">Remove</button>
+            `;
+            groceryList.appendChild(div);
+        }
+
+        // Function to remove an item
+        function removeItem(button) {
+            const item = button.parentElement;
+            item.remove();
+            saveList(); // Save updated list to localStorage
+        }
+
+        // Function to clear the list
+        function clearList() {
+            const groceryList = document.getElementById('groceryList');
+            groceryList.innerHTML = ''; // Clear the list
+            saveList(); // Save empty list to localStorage
+        }
+    </script>
+</body>
+</html>
