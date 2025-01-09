@@ -109,6 +109,17 @@
             border: 1px solid red;
             background-color: #ffe6e6;
         }
+
+        .grocery-item.checked label {
+            text-decoration: line-through;
+            color: gray;
+        }
+
+        /* Add space between checkbox and item name */
+        .checkbox {
+            margin-right: 10px;
+        }
+
     </style>
 </head>
 <body>
@@ -146,7 +157,7 @@
             const newItemName = document.getElementById("newItemName").value.trim();
             if (newItemName) {
                 const newItemRef = groceryListRef.push();
-                newItemRef.set({ name: newItemName, quantity: "250g" });
+                newItemRef.set({ name: newItemName, quantity: "250g", checked: false });
                 document.getElementById("newItemName").value = "";  // Clear input field
             } else {
                 alert("Please enter a valid item name!");
@@ -167,6 +178,7 @@
                 div.setAttribute('data-key', itemKey);
 
                 div.innerHTML = `
+                    <input type="checkbox" class="checkbox" onchange="toggleChecked('${itemKey}')" ${item.checked ? 'checked' : ''}>
                     <label>${item.name}</label>
                     <select onchange="handleQuantityChange('${itemKey}', this.value)">
                         <option value="250g" ${item.quantity === "250g" ? "selected" : ""}>250g</option>
@@ -187,8 +199,21 @@
                 } else {
                     customInputField.style.display = "none";  // Hide custom input field
                 }
+
+                if (item.checked) {
+                    div.classList.add("checked"); // Add checked class for strikethrough
+                }
             });
         });
+
+        // Toggle checked status of the item
+        function toggleChecked(itemKey) {
+            const itemRef = groceryListRef.child(itemKey);
+            itemRef.once('value', (snapshot) => {
+                const item = snapshot.val();
+                itemRef.update({ checked: !item.checked });
+            });
+        }
 
         // Handle the change in dropdown selection
         function handleQuantityChange(itemKey, quantity) {
