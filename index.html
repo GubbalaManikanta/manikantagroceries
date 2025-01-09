@@ -159,12 +159,10 @@
                 div.classList.add("grocery-item");
                 div.innerHTML = `
                     <label>${item.name}</label>
-                    <select>
+                    <select onchange="updateQuantity('${itemKey}', this.value)">
                         <option value="250g" ${item.quantity === "250g" ? "selected" : ""}>250g</option>
                         <option value="500g" ${item.quantity === "500g" ? "selected" : ""}>500g</option>
                         <option value="1kg" ${item.quantity === "1kg" ? "selected" : ""}>1kg</option>
-                        <option value="1.5kg" ${item.quantity === "1.5kg" ? "selected" : ""}>1.5kg</option>
-                        <option value="2kg" ${item.quantity === "2kg" ? "selected" : ""}>2kg</option>
                         <option value="small packet" ${item.quantity === "small packet" ? "selected" : ""}>Small Packet</option>
                     </select>
                     <button class="remove-button" onclick="removeItem('${itemKey}')">Remove</button>
@@ -172,6 +170,12 @@
                 groceryList.appendChild(div);
             });
         });
+
+        // Update quantity in Firebase
+        function updateQuantity(itemKey, quantity) {
+            var itemRef = groceryListRef.child(itemKey);
+            itemRef.update({ quantity: quantity });
+        }
 
         // Remove item from Firebase
         function removeItem(itemKey) {
