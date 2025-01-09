@@ -99,6 +99,20 @@
         .clear-list-button:hover {
             background-color: #e68a00;
         }
+
+        /* Custom quantity input */
+        .quantity-input {
+            width: 80px;
+            padding: 5px;
+            margin-left: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        /* Hide the custom input field by default */
+        .custom-quantity {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -159,22 +173,39 @@
                 div.classList.add("grocery-item");
                 div.innerHTML = `
                     <label>${item.name}</label>
-                    <select onchange="updateQuantity('${itemKey}', this.value)">
+                    <select onchange="handleQuantityChange('${itemKey}', this.value)">
                         <option value="250g" ${item.quantity === "250g" ? "selected" : ""}>250g</option>
                         <option value="500g" ${item.quantity === "500g" ? "selected" : ""}>500g</option>
                         <option value="1kg" ${item.quantity === "1kg" ? "selected" : ""}>1kg</option>
                         <option value="small packet" ${item.quantity === "small packet" ? "selected" : ""}>Small Packet</option>
+                        <option value="custom" ${item.quantity === "custom" ? "selected" : ""}>Custom</option>
                     </select>
+                    <input class="quantity-input custom-quantity" type="text" value="${item.quantity}" placeholder="Enter custom quantity" onchange="handleCustomQuantity('${itemKey}', this.value)">
                     <button class="remove-button" onclick="removeItem('${itemKey}')">Remove</button>
                 `;
                 groceryList.appendChild(div);
+
+                // Toggle visibility of custom quantity input based on selected option
+                if (item.quantity === "custom") {
+                    div.querySelector('.custom-quantity').style.display = "inline-block";
+                }
             });
         });
 
-        // Update quantity in Firebase
-        function updateQuantity(itemKey, quantity) {
+        // Handle the change in dropdown selection
+        function handleQuantityChange(itemKey, quantity) {
             var itemRef = groceryListRef.child(itemKey);
-            itemRef.update({ quantity: quantity });
+            if (quantity === "custom") {
+                itemRef.update({ quantity: "custom" }); // Set to custom
+            } else {
+                itemRef.update({ quantity: quantity }); // Update with predefined quantity
+            }
+        }
+
+        // Handle custom quantity input change
+        function handleCustomQuantity(itemKey, quantity) {
+            var itemRef = groceryListRef.child(itemKey);
+            itemRef.update({ quantity: quantity }); // Update with custom quantity entered by user
         }
 
         // Remove item from Firebase
