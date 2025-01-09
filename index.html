@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grocery List</title>
     <style>
-        /* Full page background */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0 20px; /* Add spacing on left and right */
+            padding: 0 20px;
             background-image: url('./egor-litvinov-ncKxCn5SI3A-unsplash.jpg');
             background-size: cover;
             background-position: center;
@@ -17,17 +16,15 @@
             height: 100vh;
         }
 
-        /* Grocery List title with black margin */
         h1 {
             text-align: center;
             color: #ff0000;
-            margin-top: 20px;  /* Add margin to the top */
-            margin-bottom: 30px;  /* Add margin to the bottom */
-            border-bottom: 2px solid black;  /* Black border under title */
+            margin-top: 20px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid black;
             padding-bottom: 10px;
         }
 
-        /* Grocery List container */
         .grocery-list {
             max-width: 600px;
             margin: 20px auto;
@@ -81,7 +78,6 @@
             background-color: #45a049;
         }
 
-        /* Red color for Remove button */
         .remove-button {
             background-color: #f44336;
             color: white;
@@ -100,7 +96,6 @@
             background-color: #e68a00;
         }
 
-        /* Custom quantity input */
         .quantity-input {
             width: 80px;
             padding: 5px;
@@ -109,9 +104,10 @@
             border-radius: 5px;
         }
 
-        /* Hide the custom input field by default */
         .custom-quantity {
             display: none;
+            border: 1px solid red;
+            background-color: #ffe6e6;
         }
     </style>
 </head>
@@ -124,13 +120,13 @@
         <button class="clear-list-button" onclick="clearList()">Clear List</button>
     </div>
 
-    <!-- Firebase SDK (use v8 for compatibility) -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script>
         // Firebase configuration
-        var firebaseConfig = {
+        const firebaseConfig = {
             apiKey: "AIzaSyBD49MyjH6BvBw6LfmjhtFefQTQ-FwEUi4",
             authDomain: "grocery-list-app-675fc.firebaseapp.com",
             projectId: "grocery-list-app-675fc",
@@ -138,39 +134,38 @@
             messagingSenderId: "475944005211",
             appId: "1:475944005211:web:185224feb421def35c997e"
         };
+
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        var database = firebase.database();
+        const database = firebase.database();
 
-        // Reference to the grocery list in the database
-        var groceryListRef = database.ref("groceryList");
+        const groceryListRef = database.ref("groceryList");
 
         // Add item to Firebase and DOM
         function addItem() {
-            var newItemName = document.getElementById("newItemName").value.trim();
+            const newItemName = document.getElementById("newItemName").value.trim();
             if (newItemName) {
-                var newItemRef = groceryListRef.push();
-                newItemRef.set({
-                    name: newItemName,
-                    quantity: "250g"
-                });
-                document.getElementById("newItemName").value = ""; // Clear input field
+                const newItemRef = groceryListRef.push();
+                newItemRef.set({ name: newItemName, quantity: "250g" });
+                document.getElementById("newItemName").value = "";  // Clear input field
             } else {
                 alert("Please enter a valid item name!");
             }
         }
 
         // Render grocery list from Firebase
-        groceryListRef.on("value", function(snapshot) {
-            var groceryList = document.getElementById("groceryList");
+        groceryListRef.on("value", (snapshot) => {
+            const groceryList = document.getElementById("groceryList");
             groceryList.innerHTML = ""; // Clear current list
 
-            snapshot.forEach(function(childSnapshot) {
-                var item = childSnapshot.val();
-                var itemKey = childSnapshot.key;
+            snapshot.forEach((childSnapshot) => {
+                const item = childSnapshot.val();
+                const itemKey = childSnapshot.key;
 
-                var div = document.createElement("div");
+                const div = document.createElement("div");
                 div.classList.add("grocery-item");
+                div.setAttribute('data-key', itemKey);
+
                 div.innerHTML = `
                     <label>${item.name}</label>
                     <select onchange="handleQuantityChange('${itemKey}', this.value)">
@@ -180,32 +175,43 @@
                         <option value="small packet" ${item.quantity === "small packet" ? "selected" : ""}>Small Packet</option>
                         <option value="custom" ${item.quantity === "custom" ? "selected" : ""}>Custom</option>
                     </select>
-                    <input class="quantity-input custom-quantity" type="text" value="${item.quantity}" placeholder="Enter custom quantity" onchange="handleCustomQuantity('${itemKey}', this.value)">
+                    <input class="quantity-input custom-quantity" type="text" value="${item.quantity === 'custom' ? item.customQuantity : ''}" placeholder="Enter custom quantity" onchange="handleCustomQuantity('${itemKey}', this.value)">
                     <button class="remove-button" onclick="removeItem('${itemKey}')">Remove</button>
                 `;
+
                 groceryList.appendChild(div);
 
-                // Toggle visibility of custom quantity input based on selected option
+                const customInputField = div.querySelector('.custom-quantity');
                 if (item.quantity === "custom") {
-                    div.querySelector('.custom-quantity').style.display = "inline-block";
+                    customInputField.style.display = "inline-block";  // Show custom input field
+                } else {
+                    customInputField.style.display = "none";  // Hide custom input field
                 }
             });
         });
 
         // Handle the change in dropdown selection
         function handleQuantityChange(itemKey, quantity) {
-            var itemRef = groceryListRef.child(itemKey);
+            const itemRef = groceryListRef.child(itemKey);
+            const customInputField = document.querySelector(`#groceryList div[data-key='${itemKey}'] .custom-quantity`);
+
             if (quantity === "custom") {
-                itemRef.update({ quantity: "custom" }); // Set to custom
+                customInputField.style.display = "inline-block";  // Show custom input field
+                itemRef.update({ quantity: "custom", customQuantity: "" });  // Reset custom quantity to empty
             } else {
-                itemRef.update({ quantity: quantity }); // Update with predefined quantity
+                itemRef.update({ quantity: quantity });
+                customInputField.style.display = "none";  // Hide custom input field
             }
         }
 
         // Handle custom quantity input change
         function handleCustomQuantity(itemKey, quantity) {
-            var itemRef = groceryListRef.child(itemKey);
-            itemRef.update({ quantity: quantity }); // Update with custom quantity entered by user
+            const itemRef = groceryListRef.child(itemKey);
+            if (quantity !== "") {
+                itemRef.update({ quantity: "custom", customQuantity: quantity });  // Save custom quantity
+            } else {
+                itemRef.update({ quantity: "custom", customQuantity: "" });  // Reset custom quantity to empty
+            }
         }
 
         // Remove item from Firebase
